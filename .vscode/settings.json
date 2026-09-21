@@ -1,0 +1,11 @@
+{
+  "workbench.startupEditor": "readme",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/backend",
+    "${workspaceFolder}/backend/common"
+  ],
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/backend",
+    "${workspaceFolder}/backend/common"
+  ]
+}

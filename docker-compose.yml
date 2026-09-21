@@ -1,0 +1,162 @@
+# ==============================================================================
+# ShipPulse - Enterprise Python Microservices Architecture
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # Angular 21 SSR Client & Web Application
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: shippulse-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - APP_URL=http://localhost:3000
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-}
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - shippulse-net
+
+  # ----------------------------------------------------------------------------
+  # Central Python API Gateway (Port 5000)
+  # ----------------------------------------------------------------------------
+  api-gateway:
+    build:
+      context: ./backend
+      dockerfile: gateway/Dockerfile
+    container_name: shippulse-gateway
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - GATEWAY_PORT=5000
+      - CORS_ORIGIN=http://localhost:3000
+      - AUTH_SERVICE_URL=http://auth-service:5001
+      - WORKFLOW_SERVICE_URL=http://workflow-service:5002
+      - PIPELINE_SERVICE_URL=http://pipeline-service:5003
+      - WEBHOOK_SERVICE_URL=http://webhook-service:5004
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      workflow-service:
+        condition: service_healthy
+      pipeline-service:
+        condition: service_healthy
+      webhook-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - shippulse-net
+
+  # ----------------------------------------------------------------------------
+  # Microservice 1: Auth & Identity Service (Port 5001)
+  # ----------------------------------------------------------------------------
+  auth-service:
+    build:
+      context: ./backend
+      dockerfile: services/auth/Dockerfile
+    container_name: shippulse-auth-service
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - AUTH_PORT=5001
+      - APP_URL=http://localhost:3000
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - shippulse-net
+
+  # ----------------------------------------------------------------------------
+  # Microservice 2: Workflow & Workspace Service (Port 5002)
+  # ----------------------------------------------------------------------------
+  workflow-service:
+    build:
+      context: ./backend
+      dockerfile: services/workflow/Dockerfile
+    container_name: shippulse-workflow-service
+    restart: unless-stopped
+    ports:
+      - "5002:5002"
+    environment:
+      - WORKFLOW_PORT=5002
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - shippulse-net
+
+  # ----------------------------------------------------------------------------
+  # Microservice 3: Pipeline & Telemetry Service (Port 5003)
+  # ----------------------------------------------------------------------------
+  pipeline-service:
+    build:
+      context: ./backend
+      dockerfile: services/pipeline/Dockerfile
+    container_name: shippulse-pipeline-service
+    restart: unless-stopped
+    ports:
+      - "5003:5003"
+    environment:
+      - PIPELINE_PORT=5003
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - shippulse-net
+
+  # ----------------------------------------------------------------------------
+  # Microservice 4: Webhook & Event Service (Port 5004)
+  # ----------------------------------------------------------------------------
+  webhook-service:
+    build:
+      context: ./backend
+      dockerfile: services/webhook/Dockerfile
+    container_name: shippulse-webhook-service
+    restart: unless-stopped
+    ports:
+      - "5004:5004"
+    environment:
+      - WEBHOOK_PORT=5004
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5004/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - shippulse-net
+
+networks:
+  shippulse-net:
+    driver: bridge
