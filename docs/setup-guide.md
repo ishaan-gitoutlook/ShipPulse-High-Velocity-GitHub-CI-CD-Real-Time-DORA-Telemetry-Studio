@@ -38,15 +38,25 @@ cp .env.example .env
 
 ## 3. Quickstart: Native Development
 
-### Step 1: Install Dependencies
+### Step 1: Environment & Dependencies
 
+#### Frontend (Node.js 22 LTS):
 ```bash
-# Install frontend packages (Angular 21 + Tailwind CSS + SSR)
 npm --prefix frontend install
+```
 
-# Install backend packages (FastAPI + Uvicorn + Pytest + HTTPX)
+#### Backend (Python 3.11+ / Virtual Environment):
+```powershell
+# On Windows PowerShell (activates the pre-configured workspace .venv):
+.\.venv\Scripts\Activate.ps1
+
+# If script execution is restricted by PowerShell policy:
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass; .\.venv\Scripts\Activate.ps1
+
+# Dependencies are already installed, but can be verified with:
 pip install -r backend/requirements.txt
 ```
+*(On macOS / Linux: `source .venv/bin/activate && pip install -r backend/requirements.txt`)*
 
 ### Step 2: Start Full Stack Concurrently
 You can launch both the Python microservices cluster (Ports 5000–5004) and the Angular SSR frontend (Port 3000) with a single command:
