@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "description": "ShipPulse - Enterprise Multi-Account GitHub CI/CD Pipeline Automation & DORA Fleet Telemetry Studio",
-  "workspaces": [
-    "frontend"
-  ],
   "scripts": {
     "start": "npm --prefix frontend start",
     "dev:frontend": "npm --prefix frontend run dev",
